@@ -7,8 +7,8 @@ const plexSans = IBM_Plex_Sans({ subsets: ['latin'], weight: ['400', '500', '600
 const plexMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-plex-mono' })
 
 export const metadata: Metadata = {
-  title: 'Bidwright — RFP Response & Presentation Builder',
-  description: 'Paste an RFP and generate a tailored proposal response, compliance matrix, and presentation deck.',
+  title: 'IBM Bob × Box',
+  description: 'Ask IBM Bob anything about your Box content and turn it into documents, decks, and emails.',
   generator: 'v0.app',
   icons: {
     icon: [

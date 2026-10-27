@@ -176,6 +176,7 @@ export function Studio() {
     <main className="grid h-dvh grid-rows-[minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[380px_minmax(0,1fr)] md:grid-rows-1 lg:grid-cols-[420px_minmax(0,1fr)]">
       <div className="min-h-0 border-b border-border md:border-b-0 md:border-r">
         <ChatPanel
+          title={messages.find((m) => m.role === 'user')?.text ?? 'New chat'}
           messages={messages}
           busy={busy}
           canPrompt={confirmed}
