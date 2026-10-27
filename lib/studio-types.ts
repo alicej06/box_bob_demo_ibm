@@ -9,6 +9,6 @@ export type Artifact = {
 export type ChatMessage =
   | { id: string; role: 'user'; text: string }
   | { id: string; role: 'assistant'; kind: 'text'; text: string }
-  | { id: string; role: 'assistant'; kind: 'sync'; completed: number; done: boolean; scanning?: string }
+  | { id: string; role: 'assistant'; kind: 'sync'; completed: number; done: boolean }
   | { id: string; role: 'assistant'; kind: 'context'; status: 'pending' | 'confirmed' }
   | { id: string; role: 'assistant'; kind: 'artifact'; artifactId: ArtifactType; title: string; version: number; note: string }

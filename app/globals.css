@@ -7,20 +7,8 @@
 @theme inline {
   --color-success: var(--success);
   --color-box: var(--box);
-  --animate-link-pulse: link-pulse 2.4s ease-in-out infinite;
-  --animate-link-draw: link-draw 0.9s ease-out 0.2s both;
   --animate-shimmer: shimmer 1.6s linear infinite;
 
-  @keyframes link-pulse {
-    0% { left: 0%; opacity: 0; }
-    15% { opacity: 1; }
-    85% { opacity: 1; }
-    100% { left: 100%; opacity: 0; }
-  }
-  @keyframes link-draw {
-    from { transform: scaleX(0); }
-    to { transform: scaleX(1); }
-  }
   @keyframes shimmer {
     from { background-position: 200% 0; }
     to { background-position: -200% 0; }

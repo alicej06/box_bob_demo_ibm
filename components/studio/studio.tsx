@@ -112,13 +112,9 @@ export function Studio() {
     push({ id: nextId(), role: 'user', text: prompt })
     const syncId = nextId()
     push({ id: syncId, role: 'assistant', kind: 'sync', completed: 0, done: false })
-    for (let i = 0; i < SYNC_STEPS.length; i++) {
-      for (const file of SYNC_STEPS[i].files) {
-        patch(syncId, { scanning: file })
-        await wait(230)
-      }
-      patch(syncId, { completed: i + 1, scanning: undefined })
-      await wait(120)
+    for (let i = 1; i <= SYNC_STEPS.length; i++) {
+      await wait(650)
+      patch(syncId, { completed: i })
     }
     patch(syncId, { done: true })
     await wait(300)

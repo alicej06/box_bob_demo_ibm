@@ -1,5 +1,5 @@
 import { FileText, Presentation, Search, Mail } from 'lucide-react'
-import { BrandLockup, ConnectionHero } from '@/components/studio/brand'
+import { BobMark, BoxMark, BrandLockup } from '@/components/studio/brand'
 import { PromptInput } from '@/components/studio/prompt-input'
 
 const SUGGESTIONS = [
@@ -19,7 +19,6 @@ export function HomeScreen({ onSubmit }: { onSubmit: (text: string) => void }) {
       <main className="flex flex-1 flex-col items-center justify-center px-4 pb-24 pt-8">
         <div className="flex w-full max-w-2xl flex-col gap-8">
           <div className="flex flex-col items-center gap-4 text-center">
-            <ConnectionHero />
             <h1 className="text-balance text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
               What should we build from your Box today?
             </h1>
@@ -47,6 +46,15 @@ export function HomeScreen({ onSubmit }: { onSubmit: (text: string) => void }) {
         </div>
       </main>
 
+      <footer className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 pb-6 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          Reasoning by <BobMark className="text-xs" />
+        </span>
+        <span aria-hidden="true">{'·'}</span>
+        <span className="flex items-center gap-1.5">
+          Content from <BoxMark className="text-xs" />
+        </span>
+      </footer>
     </div>
   )
 }
