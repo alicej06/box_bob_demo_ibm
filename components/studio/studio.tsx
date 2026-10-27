@@ -1,10 +1,11 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { ArtifactPanel } from '@/components/studio/artifact-panel'
+import { ArtifactPanel, type SaveState } from '@/components/studio/artifact-panel'
 import { ChatPanel } from '@/components/studio/chat-panel'
 import { HomeScreen } from '@/components/studio/home-screen'
-import { MOCK_EMAIL, MOCK_RESPONSE, SYNC_STEPS } from '@/lib/mock-data'
+import { SourcePreview } from '@/components/studio/source-preview'
+import { MOCK_EMAIL, MOCK_RESPONSE, SYNC_STEPS, type BoxFile } from '@/lib/mock-data'
 import type { RfpOutput } from '@/lib/rfp-schema'
 import type { Artifact, ArtifactType, ChatMessage } from '@/lib/studio-types'
 
@@ -61,9 +62,19 @@ export function Studio() {
   const patch = (id: string, update: Partial<ChatMessage>) =>
     setMessages((prev) => prev.map((m) => (m.id === id ? ({ ...m, ...update } as ChatMessage) : m)))
 
+  const [generatingId, setGeneratingId] = useState<ArtifactType | null>(null)
+  const [unseen, setUnseen] = useState<ArtifactType[]>([])
+  const [saved, setSaved] = useState<Partial<Record<ArtifactType, number>>>({})
+  const [saving, setSaving] = useState(false)
+  const [previewFile, setPreviewFile] = useState<BoxFile | null>(null)
   const versionsRef = useRef<Partial<Record<ArtifactType, number>>>({})
 
-  function upsertArtifact(id: ArtifactType, note: string) {
+  function select(id: ArtifactType) {
+    setActiveId(id)
+    setUnseen((prev) => prev.filter((u) => u !== id))
+  }
+
+  function upsertArtifact(id: ArtifactType, note: string, { focus = true } = {}) {
     const version = (versionsRef.current[id] ?? 0) + 1
     versionsRef.current[id] = version
     setArtifacts((prev) =>
@@ -71,8 +82,29 @@ export function Studio() {
         ? prev.map((a) => (a.id === id ? { ...a, version } : a))
         : [...prev, { id, title: TITLES[id], version }],
     )
-    setActiveId(id)
+    if (focus) select(id)
+    else setUnseen((prev) => (prev.includes(id) ? prev : [...prev, id]))
     push({ id: nextId(), role: 'assistant', kind: 'artifact', artifactId: id, title: TITLES[id], version, note })
+  }
+
+  async function generate(id: ArtifactType, busyText: string, ms: number, note: string) {
+    setBusy(busyText)
+    setArtifacts((prev) => (prev.some((a) => a.id === id) ? prev : [...prev, { id, title: TITLES[id], version: 0 }]))
+    setGeneratingId(id)
+    select(id)
+    await wait(ms)
+    setGeneratingId(null)
+    setBusy(null)
+    upsertArtifact(id, note)
+  }
+
+  async function saveActive() {
+    if (!activeId) return
+    const id = activeId
+    setSaving(true)
+    await wait(900)
+    setSaving(false)
+    setSaved((prev) => ({ ...prev, [id]: versionsRef.current[id] }))
   }
 
   async function start(prompt: string) {
@@ -80,9 +112,13 @@ export function Studio() {
     push({ id: nextId(), role: 'user', text: prompt })
     const syncId = nextId()
     push({ id: syncId, role: 'assistant', kind: 'sync', completed: 0, done: false })
-    for (let i = 1; i <= SYNC_STEPS.length; i++) {
-      await wait(650)
-      patch(syncId, { completed: i })
+    for (let i = 0; i < SYNC_STEPS.length; i++) {
+      for (const file of SYNC_STEPS[i].files) {
+        patch(syncId, { scanning: file })
+        await wait(230)
+      }
+      patch(syncId, { completed: i + 1, scanning: undefined })
+      await wait(120)
     }
     patch(syncId, { done: true })
     await wait(300)
@@ -98,11 +134,10 @@ export function Studio() {
     setMessages((prev) =>
       prev.map((m) => (m.role === 'assistant' && m.kind === 'context' ? { ...m, status: 'confirmed' } : m)),
     )
-    setBusy('Writing response from 10 Box sources…')
-    await wait(1800)
-    setBusy(null)
-    upsertArtifact(
+    await generate(
       'response',
+      'Writing response from 10 Box sources…',
+      2200,
       'I drafted the full response, including a compliance matrix. The on-prem residency question is flagged in Security & Compliance. You can ask for edits, or ask for a presentation or cover email.',
     )
   }
@@ -112,21 +147,20 @@ export function Studio() {
     const t = text.toLowerCase()
 
     if (/deck|presentation|slides|pitch/.test(t)) {
-      setBusy('Building presentation…')
-      await wait(1600)
-      setBusy(null)
-      upsertArtifact('deck', 'Here is an 8-slide deck built from the response, with speaker notes. You can export it to PowerPoint.')
+      await generate(
+        'deck',
+        'Building presentation…',
+        2000,
+        'Here is an 8-slide deck built from the response, with speaker notes. You can export it to PowerPoint.',
+      )
       return
     }
     if (/email|cover letter|cover note/.test(t)) {
-      setBusy('Drafting cover email…')
-      await wait(1200)
-      setBusy(null)
-      upsertArtifact('email', 'I drafted a cover email to send with the submission.')
+      await generate('email', 'Drafting cover email…', 1500, 'I drafted a cover email to send with the submission.')
       return
     }
     if (/brief|research|sources/.test(t)) {
-      setActiveId('brief')
+      select('brief')
       push({ id: nextId(), role: 'assistant', kind: 'text', text: 'I opened the research brief in the panel on the right.' })
       return
     }
@@ -136,9 +170,10 @@ export function Studio() {
       await wait(1400)
       setBusy(null)
       setDoc((d) => sharpenPricing(d))
-      upsertArtifact('response', 'I added a multi-year discount option to the pricing section.')
+      const onDeck = activeId === 'deck'
+      upsertArtifact('response', 'I added a multi-year discount option to the pricing section.', { focus: !onDeck })
       if (versionsRef.current.deck) {
-        upsertArtifact('deck', 'I also updated the Investment slide to match.')
+        upsertArtifact('deck', 'I also updated the Investment slide to match.', { focus: onDeck })
       }
       return
     }
@@ -168,12 +203,22 @@ export function Studio() {
     setConfirmed(false)
     setDoc(MOCK_RESPONSE)
     setEmail(MOCK_EMAIL)
+    setGeneratingId(null)
+    setUnseen([])
+    setSaved({})
+    setPreviewFile(null)
   }
 
   if (!started) return <HomeScreen onSubmit={start} />
 
+  const saveState: SaveState = saving
+    ? 'saving'
+    : activeId && saved[activeId] && saved[activeId] === versionsRef.current[activeId]
+      ? 'saved'
+      : 'idle'
+
   return (
-    <main className="grid h-dvh grid-rows-[minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[380px_minmax(0,1fr)] md:grid-rows-1 lg:grid-cols-[420px_minmax(0,1fr)]">
+    <main className="relative grid h-dvh grid-rows-[minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[380px_minmax(0,1fr)] md:grid-rows-1 lg:grid-cols-[420px_minmax(0,1fr)]">
       <div className="min-h-0 border-b border-border md:border-b-0 md:border-r">
         <ChatPanel
           title={messages.find((m) => m.role === 'user')?.text ?? 'New chat'}
@@ -182,11 +227,23 @@ export function Studio() {
           canPrompt={confirmed}
           onSubmit={handlePrompt}
           onConfirm={confirmBrief}
-          onOpenArtifact={setActiveId}
+          onOpenArtifact={select}
           onReset={reset}
         />
       </div>
-      <ArtifactPanel artifacts={artifacts} activeId={activeId} onSelect={setActiveId} doc={doc} email={email} />
+      <ArtifactPanel
+        artifacts={artifacts}
+        activeId={activeId}
+        onSelect={select}
+        doc={doc}
+        email={email}
+        generatingId={generatingId}
+        unseen={unseen}
+        saveState={saveState}
+        onSave={saveActive}
+        onOpenSource={setPreviewFile}
+      />
+      {previewFile && <SourcePreview file={previewFile} onClose={() => setPreviewFile(null)} />}
     </main>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { Check, FileText, Loader2, Presentation, Mail, FolderSearch } from 'lucide-react'
+import { BoxMark } from '@/components/studio/brand'
 import { Button } from '@/components/ui/button'
 import { CONTEXT_GROUPS, OPEN_QUESTIONS, SYNC_STEPS } from '@/lib/mock-data'
 import type { ArtifactType, ChatMessage } from '@/lib/studio-types'
@@ -8,10 +9,27 @@ import { cn } from '@/lib/utils'
 
 const artifactIcon = { brief: FolderSearch, response: FileText, deck: Presentation, email: Mail } as const
 
-function SyncProgress({ completed, done }: { completed: number; done: boolean }) {
+function SyncProgress({ completed, done, scanning }: { completed: number; done: boolean; scanning?: string }) {
+  const progress = Math.round((completed / SYNC_STEPS.length) * 100)
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
-      <p className="text-sm font-medium text-foreground">{done ? 'Synced with Box' : 'Syncing with Box…'}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <BoxMark className="text-xs" />
+          {done ? 'Synced with Box' : 'Syncing with Box…'}
+        </p>
+        <span className="font-mono text-xs text-muted-foreground">{progress}%</span>
+      </div>
+      <div
+        className="h-1 overflow-hidden rounded-full bg-secondary"
+        role="progressbar"
+        aria-valuenow={progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Box sync progress"
+      >
+        <div className="h-full rounded-full bg-box transition-[width] duration-500 ease-out" style={{ width: `${progress}%` }} />
+      </div>
       <ol className="flex flex-col gap-1.5">
         {SYNC_STEPS.map((step, i) => {
           const state = i < completed ? 'done' : i === completed && !done ? 'active' : 'pending'
@@ -29,6 +47,15 @@ function SyncProgress({ completed, done }: { completed: number; done: boolean })
               <span className="flex flex-col">
                 <span className="text-foreground">{step.label}</span>
                 {state === 'done' && <span className="text-xs text-muted-foreground">{step.detail}</span>}
+                {state === 'active' && scanning && (
+                  <span
+                    key={scanning}
+                    className="flex items-center gap-1 truncate font-mono text-xs text-box animate-in fade-in slide-in-from-bottom-1 duration-150"
+                  >
+                    <FileText className="size-3 shrink-0" aria-hidden="true" />
+                    <span className="truncate">{scanning}</span>
+                  </span>
+                )}
               </span>
             </li>
           )
@@ -114,7 +141,8 @@ export function ChatMessageView({
     return <p className="text-pretty text-sm leading-relaxed text-foreground">{message.text}</p>
   }
 
-  if (message.kind === 'sync') return <SyncProgress completed={message.completed} done={message.done} />
+  if (message.kind === 'sync')
+    return <SyncProgress completed={message.completed} done={message.done} scanning={message.scanning} />
 
   if (message.kind === 'context')
     return <ContextReview status={message.status} onConfirm={onConfirm} onOpenBrief={() => onOpenArtifact('brief')} />

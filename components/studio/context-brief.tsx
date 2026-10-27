@@ -1,12 +1,14 @@
 import { FileText } from 'lucide-react'
-import { CONTEXT_GROUPS, OPEN_QUESTIONS } from '@/lib/mock-data'
+import { CONTEXT_GROUPS, OPEN_QUESTIONS, type BoxFile } from '@/lib/mock-data'
 
-export function ContextBrief() {
+export function ContextBrief({ onOpenSource }: { onOpenSource: (file: BoxFile) => void }) {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h2 className="text-balance text-2xl font-semibold tracking-tight text-foreground">Research brief</h2>
-        <p className="leading-relaxed text-muted-foreground">Pulled from 10 files in Box. Everything below feeds the response.</p>
+        <p className="leading-relaxed text-muted-foreground">
+          Pulled from 10 files in Box. Click any file to see the passage Bob used.
+        </p>
       </div>
 
       {CONTEXT_GROUPS.map((g) => (
@@ -22,15 +24,17 @@ export function ContextBrief() {
           </ul>
           <div className="flex flex-wrap gap-2 border-t border-border pt-3">
             {g.sources.map((s) => (
-              <span
+              <button
+                type="button"
                 key={s.name}
-                title={`${s.folder}/${s.name}`}
-                className="flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-xs text-secondary-foreground"
+                title={`Preview ${s.folder}/${s.name}`}
+                onClick={() => onOpenSource(s)}
+                className="flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-xs text-secondary-foreground transition-colors hover:bg-box/10 hover:text-box"
               >
                 <FileText className="size-3.5" aria-hidden="true" />
                 {s.name}
                 <span className="text-muted-foreground">{s.modified}</span>
-              </span>
+              </button>
             ))}
           </div>
         </section>

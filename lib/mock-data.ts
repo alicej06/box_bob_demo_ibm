@@ -18,13 +18,108 @@ export type ContextGroup = {
 }
 
 export const SYNC_STEPS = [
-  { label: 'Connecting to Box', detail: 'meridian-cloud.app.box.com' },
-  { label: 'Searching for the RFP', detail: 'Found "Northwind Health – Patient Engagement RFP.pdf"' },
-  { label: 'Extracting requirements', detail: '18 requirements across 6 sections' },
-  { label: 'Reading product documentation', detail: '4 files in /Product/Specs' },
-  { label: 'Matching past RFP responses', detail: '3 similar healthcare bids' },
-  { label: 'Researching the client', detail: '2 account notes in /Sales/Accounts' },
+  {
+    label: 'Connecting to Box',
+    detail: 'meridian-cloud.app.box.com',
+    files: ['Authorizing Bob…', 'Loading folder index…'],
+  },
+  {
+    label: 'Searching for the RFP',
+    detail: 'Found "Northwind Health – Patient Engagement RFP.pdf"',
+    files: ['/RFPs/Inbound/2026', 'Northwind Health – Patient Engagement RFP.pdf', 'Attachment A – Pricing Form.xlsx'],
+  },
+  {
+    label: 'Extracting requirements',
+    detail: '18 requirements across 6 sections',
+    files: ['Section 3 – Scope of Work', 'Section 4 – Technical Requirements', 'Attachment B – Security Questionnaire.xlsx'],
+  },
+  {
+    label: 'Reading product documentation',
+    detail: '4 files in /Product/Specs',
+    files: ['Meridian Engage – Product Overview 2026.pdf', 'Integration Catalog.xlsx', 'Security & Compliance Brief.docx'],
+  },
+  {
+    label: 'Matching past RFP responses',
+    detail: '3 similar healthcare bids',
+    files: ['Lakeshore Medical – Response FINAL.docx', 'Cedar Valley – Response FINAL.docx', 'Summit Regional – Debrief.pptx'],
+  },
+  {
+    label: 'Researching the client',
+    detail: '2 account notes in /Sales/Accounts',
+    files: ['/Sales/Accounts/Northwind', 'Northwind account notes.docx'],
+  },
 ]
+
+export type SourceExcerpt = {
+  location: string
+  before: string[]
+  highlight: string
+  after: string[]
+}
+
+export const SOURCE_EXCERPTS: Record<string, SourceExcerpt> = {
+  'Northwind Health – Patient Engagement RFP.pdf': {
+    location: 'Page 7 · Section 4.2',
+    before: [
+      '4.2 Technical Requirements. The selected vendor shall provide a single patient engagement platform that replaces the current portal, messaging, and scheduling tools in use across all fourteen (14) Northwind facilities.',
+    ],
+    highlight:
+      'The platform must integrate with Northwind’s Epic EHR using FHIR R4, support single sign-on through Azure AD (SAML 2.0), and meet WCAG 2.1 AA for all patient-facing surfaces.',
+    after: [
+      'Vendors shall describe their approach to bilingual (English and Spanish) delivery, including how translated content is maintained over time.',
+    ],
+  },
+  'Northwind account notes.docx': {
+    location: 'Meeting notes · Oct 9',
+    before: ['Call with Dana Whitfield (VP Digital Experience) and two members of the patient access team.'],
+    highlight:
+      'Dana said cost overruns on their last portal project are the main concern from the CFO. Fixed implementation fees will matter more than the lowest sticker price.',
+    after: ['Next step: share a reference from a health system of similar size before the RFP closes.'],
+  },
+  'Attachment B – Security Questionnaire.xlsx': {
+    location: 'Sheet "Hosting" · Row 14',
+    before: ['Q13. Describe encryption practices for data at rest and in transit.'],
+    highlight: 'Q14. Can the vendor support an on-premises deployment for patient data residency? If not, describe alternatives.',
+    after: ['Q15. Provide the most recent SOC 2 Type II report or equivalent.'],
+  },
+  'Meridian Engage – Product Overview 2026.pdf': {
+    location: 'Page 3 · Platform overview',
+    before: ['Meridian Engage is the patient engagement platform trusted by more than 60 health systems across North America.'],
+    highlight:
+      'One platform for the patient portal, native iOS and Android apps, secure messaging with care-team routing, and self-scheduling built directly on Epic Cadence availability.',
+    after: ['Every patient-facing surface ships in 12 languages and is audited annually against WCAG 2.1 AA.'],
+  },
+  'Integration Catalog.xlsx': {
+    location: 'Sheet "EHR" · Row 2',
+    before: ['EHR vendor: Epic. Status: Generally available.'],
+    highlight: 'Connectors: FHIR R4 (read/write), HL7v2 ADT and SIU feeds. No custom middleware required.',
+    after: ['Live customers on this connector: 38.'],
+  },
+  'Security & Compliance Brief.docx': {
+    location: 'Page 2 · Certifications',
+    before: ['Meridian Cloud maintains an information security program aligned to NIST 800-53.'],
+    highlight: 'Current certifications: SOC 2 Type II (renewed June 2026) and HITRUST r2. A HIPAA Business Associate Agreement is available on request.',
+    after: ['Customer data is hosted in dedicated US-region tenants and encrypted with AES-256 at rest.'],
+  },
+  'Lakeshore Medical – Response FINAL.docx': {
+    location: 'Page 11 · Implementation plan',
+    before: ['Lakeshore Medical operates nine hospitals on a single Epic instance.'],
+    highlight: 'We delivered network-wide go-live in month 7, using a two-hospital pilot in months 4–6 to validate the Epic scheduling integration.',
+    after: ['Outcome: contract awarded at $1.4M over three years.'],
+  },
+  'Cedar Valley – Response FINAL.docx': {
+    location: 'Page 4 · References',
+    before: ['Cedar Valley Health selected Meridian Engage in 2025 after a competitive evaluation.'],
+    highlight: 'Their CIO has agreed to act as a reference for future healthcare bids, with a focus on adoption and call-center deflection.',
+    after: ['Patient portal adoption rose from 31% to 58% within the first year.'],
+  },
+  'Summit Regional – Debrief.pptx': {
+    location: 'Slide 5 · Why we lost',
+    before: ['Summit scored us highest on solution fit and security.'],
+    highlight: 'We lost on price. The evaluation team flagged variable implementation fees and change-order risk as the deciding factor.',
+    after: ['Recommendation: lead with fixed implementation pricing on future bids.'],
+  },
+}
 
 export const CONTEXT_GROUPS: ContextGroup[] = [
   {
